@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      golang: 1.16
+    commands:
+      - echo "Instalando Terraform..."
+      - curl -s -qL -o terraform.zip https://releases.hashicorp.com/terraform/1.1.7/terraform_1.1.7_linux_amd64.zip
+      - unzip terraform.zip
+      - mv terraform /usr/local/bin/
+
+  pre_build:
+    commands:
+      - echo "Inicializando Terraform..."
+      - terraform init
+
+  build:
+    commands:
+      - echo "Planificando y aplicando cambios..."
+      # El -var-file se debe determinar dinámicamente según la rama o entorno
+      - terraform plan -out=tfplan -var-file="envs/dev.tfvars"
+      - terraform apply -auto-approve tfplan

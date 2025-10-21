@@ -1,0 +1,10 @@
+variable "project_name" {}
+variable "environment" {}
+variable "github_owner" {}
+variable "github_repo_infra" {}
+variable "github_repo_app" {}
+variable "github_branch" {}
+variable "ecr_repo_name" {}
+variable "ecs_cluster_name" {}
+variable "ecs_service_name" {}
+variable "frontend_bucket_id" {}

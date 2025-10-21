@@ -1,0 +1,17 @@
+variable "project_name" {}
+variable "environment" {}
+variable "vpc_id" {}
+variable "public_subnets_ids" {}
+variable "private_subnets_ids" {}
+variable "alb_sg_id" {}
+variable "ecs_sg_id" {}
+variable "ecs_task_role_arn" {}
+variable "ecs_exec_role_arn" {}
+variable "ecr_repo_url" {}
+variable "db_secret_arn" {}
+variable "container_port" {}
+variable "container_cpu" {}
+variable "container_memory" {}
+variable "autoscale_min_tasks" {}
+variable "autoscale_max_tasks" {}
+variable "log_group_name" {}
