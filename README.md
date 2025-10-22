@@ -18,7 +18,7 @@ Este proyecto implementa la infraestructura completa de un sistema de reservas d
 
 📜 ESTRUCTURA DE ARCHIVOS
 
-.
+.\
 ├── modules/ \
 │   ├── cicd/ \
 │   ├── compute/ \
@@ -41,7 +41,7 @@ Este proyecto implementa la infraestructura completa de un sistema de reservas d
 └── README.md\
 
 ## 🚀 INSTRUCCIONES DE DESPLIEGUE\
-REQUISITOS PREVIOS:\
+REQUISITOS PREVIOS:
 - Cuenta AWS con permisos de administrador.
 - AWS CLI configurado (aws configure).
 - Terraform instalado (v1.5+).
@@ -50,8 +50,6 @@ REQUISITOS PREVIOS:\
 - Git para clonar el repositorio.
 
 ## 🚀 Pasos para el Despliegue
-
----
 
 ### 🧱 1. Configurar el Backend Remoto
 
@@ -81,7 +79,6 @@ github_repo_app → nombre del repo de Aplicación
 
 codestar_connection_arn → ARN de la conexión creada en el paso 5 de requisitos
 
----
 ### 🧩 3. Inicializar Terraform
 
 Ejecuta este comando en la carpeta raíz del proyecto.
