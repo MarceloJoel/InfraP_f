@@ -63,3 +63,14 @@ resource "aws_ecr_repository" "app" {
     scan_on_push = true
   }
 }
+
+# Bucket para los artefactos de CodePipeline
+resource "aws_s3_bucket" "codepipeline_artifacts" {
+  bucket = "${var.project_name}-codepipeline-artifacts-${var.environment}"
+
+  # Previene la eliminación accidental del bucket
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
