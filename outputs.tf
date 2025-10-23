@@ -1,33 +1,34 @@
-# =================================================================================
-# Salidas Principales del Despliegue
-# =================================================================================
+# Salidas Principales de la Infraestructura
 
-output "alb_dns_name" {
-  description = "DNS público del Application Load Balancer para acceder a la API."
-  value       = module.compute.alb_dns_name
+output "frontend_url" {
+  description = "URL del sitio web del frontend (CloudFront)"
+  value       = "https://${module.compute.cloudfront_domain_name}" # CloudFront siempre usa HTTPS
 }
 
-output "frontend_s3_bucket_name" {
-  description = "Nombre del bucket S3 que aloja el frontend de Angular."
-  value       = module.storage.frontend_s3_bucket_id
+output "api_url" {
+  description = "URL del backend API (Application Load Balancer)"
+  value       = "http://${module.compute.alb_dns_name}" # Usamos HTTP para esta versión general
 }
 
-output "cloudfront_distribution_domain" {
-  description = "Dominio de la distribución de CloudFront para acceder al frontend."
-  value       = "TO-DO: Add CloudFront module and output" # Se debe añadir un módulo para CloudFront y Route 53
-}
-
-output "ecr_repository_url" {
-  description = "URL del repositorio ECR para las imágenes Docker."
-  value       = module.storage.ecr_repo_url
+output "db_endpoint" {
+  description = "Endpoint de la base de datos RDS"
+  value       = module.database.db_endpoint
+  sensitive   = true
 }
 
 output "db_secret_arn" {
-  description = "ARN del secreto en AWS Secrets Manager para la base de datos."
+  description = "ARN del secreto de la base de datos en Secrets Manager"
   value       = module.database.db_secret_arn
+  sensitive   = true
 }
 
-output "ecs_cluster_name" {
-  description = "Nombre del clúster de ECS."
-  value       = module.compute.ecs_cluster_name
+output "frontend_s3_bucket_name" {
+  description = "Nombre del bucket S3 para el hosting del frontend"
+  value       = module.storage.frontend_s3_bucket_id
 }
+
+output "web_api_ecr_repo_url" {
+  description = "URL del repositorio ECR para la API web"
+  value       = module.storage.web_api_ecr_repo_url
+}
+

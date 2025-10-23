@@ -1,17 +1,16 @@
-# =================================================================================
-# Variables para el Entorno de Staging (STAGE)
-# =================================================================================
+# Variables para el entorno de STAGING (stage)
 
 environment = "stage"
 
-# Configuración intermedia, más similar a producción
-db_instance_class     = "db.t3.small"
-db_allocated_storage  = 50
-autoscale_min_tasks   = 2
-autoscale_max_tasks   = 4
+# --- Base de Datos ---
+db_instance_class      = "db.t3.micro" # Se puede mantener pequeño o escalar a 'small' para pruebas
+db_allocated_storage   = 20
 
-# Reemplaza con tus datos de GitHub
-github_owner      = "your-github-username"
-github_repo_infra = "ares-infra"
-github_repo_app   = "ares-app"
-github_branch     = "release"
+# --- CI/CD y GitHub ---
+# REEMPLAZA ESTOS VALORES con los tuyos
+# -------------------------------------------------------------------------------
+github_owner            = "tu-usuario-de-github"
+github_repo_infra       = "tu-repo-de-infraestructura"
+github_repo_app         = "tu-repo-de-aplicacion"
+codestar_connection_arn = "arn:aws:codestar-connections:us-east-1:123456789012:connection/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+

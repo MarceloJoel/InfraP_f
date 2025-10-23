@@ -1,27 +1,67 @@
+# buildspec/app_build.yml
+# Usado por el Pipeline de Aplicación - Etapa "Build"
+# 1. Construye el frontend (Angular)
+# 2. Construye la imagen Docker del backend (Spring Boot)
+# 3. Sube la imagen Docker a ECR
+
 version: 0.2
 
 phases:
+  install:
+    runtime-versions:
+      docker: 20
+      nodejs: 18
+      java: corretto17 # Asegúrate que coincida con tu JDK de Spring Boot
+    commands:
+      # Instala dependencias del frontend
+      - "echo 'Installing frontend dependencies...'"
+      - "cd frontend" # Ajusta esta ruta si es diferente
+      - "npm install"
+      - "cd .."
+
   pre_build:
     commands:
-      - echo "Iniciando sesión en Amazon ECR..."
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME
-      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - IMAGE_TAG=${COMMIT_HASH:=latest}
+      # Iniciar sesión en Amazon ECR
+      - "echo 'Logging in to Amazon ECR...'"
+      - "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+
+      # Variables de entorno para la imagen
+      - "IMAGE_REPO_NAME=$WEB_API_ECR_REPO_NAME"
+      - "IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)" # Usa el hash corto del commit
 
   build:
     commands:
-      - echo "Construyendo la imagen de Docker..."
-      # Asumiendo que el Dockerfile está en la raíz del repo de la app
-      - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
+      # 1. Construir el Frontend
+      - "echo 'Building frontend...'"
+      - "cd frontend" # Ajusta esta ruta
+      - "npm run build -- --configuration production" # O el script que uses para build
+      - "cd .."
+
+      # 2. Construir la Imagen Docker del Backend
+      - "echo 'Building backend Docker image...'"
+      - "cd backend" # Ajusta esta ruta si tu Dockerfile está en otra parte
+      - "docker build -t $IMAGE_REPO_NAME:latest ."
+      - "docker tag $IMAGE_REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG"
+      - "docker tag $IMAGE_REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest"
+      - "cd .."
 
   post_build:
     commands:
-      - echo "Subiendo la imagen de Docker a ECR..."
-      - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo "Creando archivo de definición de imagen para el despliegue..."
-      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      # 3. Subir la Imagen Docker a ECR
+      - "echo 'Pushing backend Docker image to ECR...'"
+      - "docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG"
+      - "docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest"
+
+      # Preparar el artefacto de salida (los archivos de frontend)
+      - "echo 'Preparing output artifacts...'"
+      - "printf '[{\"name\":\"app-image-tag\",\"value\":\"%s\"}]' $IMAGE_TAG > image-tag.json" # Guarda la etiqueta de la imagen para el deploy
 
 artifacts:
   files:
-    - imagedefinitions.json
+    # El frontend construido
+    - "frontend/dist/angular-app/**/*" # AJUSTA esta ruta a tu carpeta 'dist'
+    # La etiqueta de la imagen para la etapa de deploy
+    - "image-tag.json"
+  base-directory: "."
+  discard-paths: yes
+

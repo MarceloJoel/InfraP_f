@@ -1,23 +1,29 @@
+# buildspec/infra_apply.yml
+
 version: 0.2
 
 phases:
-  install:
-    runtime-versions:
-      golang: 1.16
-    commands:
-      - echo "Instalando Terraform..."
-      - curl -s -qL -o terraform.zip https://releases.hashicorp.com/terraform/1.1.7/terraform_1.1.7_linux_amd64.zip
-      - unzip terraform.zip
-      - mv terraform /usr/local/bin/
-
   pre_build:
     commands:
-      - echo "Inicializando Terraform..."
-      - terraform init
+      - echo "Iniciando sesión en Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
 
   build:
     commands:
-      - echo "Planificando y aplicando cambios..."
-      # El -var-file se debe determinar dinámicamente según la rama o entorno
-      - terraform plan -out=tfplan -var-file="envs/dev.tfvars"
-      - terraform apply -auto-approve tfplan
+      - echo "Construyendo la imagen de Docker..."
+      # Asumiendo que el Dockerfile está en la raíz del repo de la app
+      - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
+
+  post_build:
+    commands:
+      - echo "Subiendo la imagen de Docker a ECR..."
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo "Creando archivo de definición de imagen para el despliegue..."
+      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
