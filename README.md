@@ -40,14 +40,12 @@ Este proyecto implementa la infraestructura completa de un sistema de reservas d
 ├── providers.tf\
 └── README.md\
 
-## 🚀 INSTRUCCIONES DE DESPLIEGUE\
-REQUISITOS PREVIOS:
-- Cuenta AWS con permisos de administrador.
-- AWS CLI configurado (aws configure).
-- Terraform instalado (v1.5+).
-- Dominio en Route 53: Necesitas tener una Zona Hospedada (Hosted Zone) pública en AWS Route 53 para el dominio que usarás (ej. midominio.com).
-- Bucket S3 y Tabla DynamoDB: Creados manualmente en us-east-1 para el backend remoto de Terraform.
-- Git para clonar el repositorio.
+## ⚙️ REQUISITOS PREVIOS:
+1. Cuenta AWS con permisos de administrador.
+2. AWS CLI configurado (aws configure). 
+3. Terraform instalado (v1.5+).
+4. Bucket S3 y Tabla DynamoDB: Creados manualmente en us-east-1 (para el backend remoto de Terraform). 
+5. Conexión de AWS CodeStar a GitHub: Creada manualmente en la consola de AWS (en us-east-1).
 
 ## 🚀 Pasos para el Despliegue
 
