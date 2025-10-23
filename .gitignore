@@ -1,2 +1,4 @@
 /.idea
 KeyAWS.txt
+/.terraform
+.terraform.lock.hcl
