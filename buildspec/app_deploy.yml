@@ -1,0 +1,57 @@
+# buildspec/app_deploy.yml
+# Usado por el Pipeline de Aplicación - Etapa "Deploy"
+# 1. Instala Terraform.
+# 2. Despliega el backend (Terraform apply para actualizar los servicios ECS).
+# 3. Despliega el frontend (S3 Sync + CloudFront Invalidation).
+
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      # 1. Instala Terraform
+      - "echo 'Installing Terraform...'"
+      - "wget https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip"
+      - "unzip terraform_1.5.7_linux_amd64.zip"
+      - "mv terraform /usr/local/bin/"
+
+  pre_build:
+    commands:
+      # 2. Prepara para el despliegue
+      - "echo 'Initializing Terraform...'"
+      - "terraform init"
+
+      # Extrae la etiqueta de la imagen del artefacto 'image-tag.json'
+      - "echo 'Extracting new image tag...'"
+      # jq está preinstalado en los entornos CodeBuild.
+      - "export IMAGE_TAG=$(jq -r '.[0].value' image-tag.json)"
+      - "if [ -z \"$IMAGE_TAG\" ] || [ \"$IMAGE_TAG\" == \"null\" ]; then echo 'Failed to extract IMAGE_TAG'; exit 1; fi"
+      - "echo \"New image tag is: $IMAGE_TAG\""
+
+  build:
+    commands:
+      # 3. Despliega el Backend (Actualiza los servicios ECS con la nueva imagen)
+      - "echo 'Deploying backend services (ECS)...'"
+      # Le pasamos la nueva etiqueta de la imagen como variable de Terraform.
+      # Nos enfocamos solo en los servicios de ECS para un despliegue rápido.
+      - "terraform apply -var-file=envs/${ENVIRONMENT}.tfvars -var=\"web_api_image_tag=${IMAGE_TAG}\" -target=module.compute.aws_ecs_service.web_api -target=module.compute.aws_ecs_service.worker -auto-approve"
+
+      # 4. Despliega el Frontend (Sincroniza los archivos con S3)
+      - "echo 'Deploying frontend to S3...'"
+      # Sincroniza el directorio actual (que contiene los artefactos del frontend)
+      # Excluimos el archivo image-tag.json para que no se suba al bucket.
+      - "aws s3 sync . s3://${FRONTEND_S3_BUCKET_ID} --delete --exclude \"image-tag.json\""
+
+  post_build:
+    commands:
+      # 5. Invalida la caché de CloudFront
+      - "echo 'Invalidating CloudFront cache...'"
+      - "aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_ID} --paths '/*'"
+      - "echo 'Deployment finished!'"
+
+artifacts:
+  # Esta etapa no produce artefactos, solo despliega.
+  discard-paths: yes
+
