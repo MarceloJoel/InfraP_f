@@ -1,6 +1,21 @@
 # modules/compute/main.tf
 # Define los recursos de cómputo: ALB, ECS (API y Worker), SQS y CloudFront
 
+# --- AÑADIDO: Bloque para declarar los proveedores que este módulo necesita ---
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+    # Declara el proveedor con alias para CloudFront
+    "aws.us_east_1" = {
+    source  = "hashicorp/aws"
+    version = "~> 5.0"
+  }
+}
+}
+
 # --- Grupos de Logs ---
 # Grupo de logs para el servicio API Web
 resource "aws_cloudwatch_log_group" "web_api" {
@@ -241,7 +256,7 @@ resource "aws_appautoscaling_policy" "web_api_cpu" {
   scalable_dimension = aws_appautoscaling_target.web_api.scalable_dimension
   service_namespace  = aws_appautoscaling_target.web_api.service_namespace
 
-  target_tracking_scaling_configuration {
+  target_tracking_scaling_policy_configuration {
     target_value = 75.0 # Mantiene el uso de CPU al 75%
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
@@ -267,12 +282,18 @@ resource "aws_appautoscaling_policy" "worker_sqs" {
   scalable_dimension = aws_appautoscaling_target.worker.scalable_dimension
   service_namespace  = aws_appautoscaling_target.worker.service_namespace
 
-  target_tracking_scaling_configuration {
+  target_tracking_scaling_policy_configuration {
     target_value = 10.0 # Intenta mantener 10 mensajes por worker
-    predefined_metric_specification {
-      predefined_metric_type = "SQSQueueDepth"
-      resource_label         = split("/", aws_sqs_queue.main.arn)[3]
+    customized_metric_specification {
+        metrc_name = "ApproximateNumberOfMessagesVisible"
+        namespace   = "AWS/SQS"
+        statistic   = "Sum"
+        dimension {
+          name = "Queuename"
+          value = aws_sqs_queue.main.name
+        }
     }
+
     scale_in_cooldown  = 300
     scale_out_cooldown = 60
   }
