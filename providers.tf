@@ -1,16 +1,16 @@
 # Configuración de los Proveedores y Backend Remoto
 
 terraform {
-  required_version = ">= 1.0.0"
+  required_version = ">= 1.6.0"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0" # Usamos una versión reciente del provider de AWS
+      version = "~> 5.60"
     }
     random = {
       source  = "hashicorp/random"
-      version = "~> 3.0" # Para generar cadenas aleatorias (ej. contraseña de BD)
+      version = "~> 3.6"
     }
   }
 
@@ -20,11 +20,11 @@ terraform {
   # con los nombres de los recursos que creaste manualmente (Requisito #3 del README).
   # -------------------------------------------------------------------------------
   backend "s3" {
-    bucket         = "reemplazame-tfstate-bucket"  # <-- REEMPLAZA ESTO
-    key            = "global/s3/terraform.tfstate" # Puedes dejar esta línea como está
-    region         = "us-east-1"
-    dynamodb_table = "reemplazame-terraform-locks" # <-- REEMPLAZA ESTO
-    encrypt        = true                          # Siempre encripta el estado
+    bucket = "ares-tfstate-marcelo-2025"  # <-- REEMPLAZA ESTO por tu Bucket "S3"
+    key = "global/s3/terraform.tfstate" # Puedes dejar esta línea como está
+    region  = "us-east-1"
+    dynamodb_table = "ares-terraform-locks" # <-- REEMPLAZA ESTO en tu "DynamoDB"
+    encrypt = true                          # Siempre encripta el estado
   }
 }
 
